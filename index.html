@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天氣查詢</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🇯🇵 大阪旅遊小幫手</title>
     <style>
         * {
             margin: 0;
@@ -13,412 +13,947 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 15px;
+            padding-bottom: 80px;
         }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            color: white;
+        .header {
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 2rem;
+            color: white;
+            margin-bottom: 20px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        .search-box {
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.3);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: white;
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .card h2 {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Currency Converter */
+        .converter-input {
             display: flex;
             gap: 10px;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
 
-        input[type="text"] {
+        .converter-input input {
             flex: 1;
-            padding: 15px 20px;
-            border: none;
-            border-radius: 50px;
-            font-size: 1rem;
-            outline: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            text-align: center;
         }
 
-        button {
-            padding: 15px 30px;
+        .converter-input input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+
+        .currency-label {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .result-box .amount {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .result-box .label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .rate-info {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        /* Expense Tracker */
+        .expense-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .expense-form input, .expense-form select {
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        .expense-form input[type="number"] {
+            width: 100px;
+        }
+
+        .expense-form input[type="text"] {
+            flex: 1;
+        }
+
+        .expense-form select {
+            width: 80px;
+        }
+
+        .add-btn {
+            padding: 12px 20px;
             background: #ff6b6b;
             color: white;
             border: none;
-            border-radius: 50px;
+            border-radius: 10px;
             font-size: 1rem;
             cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
-        button:hover {
-            background: #ee5a5a;
-            transform: scale(1.05);
+        .expense-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .weather-card {
-            background: rgba(255,255,255,0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            display: none;
-        }
-
-        .weather-card.show {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .current-weather {
+        .summary-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
             text-align: center;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
-            margin-bottom: 20px;
         }
 
-        .city-name {
-            font-size: 1.5rem;
+        .summary-box .amount {
+            font-size: 1.3rem;
+            font-weight: bold;
             color: #333;
+        }
+
+        .summary-box .label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .expense-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .expense-item:last-child {
+            border-bottom: none;
+        }
+
+        .expense-item .info {
+            flex: 1;
+        }
+
+        .expense-item .category {
+            font-size: 0.75rem;
+            color: #999;
+        }
+
+        .expense-item .amount {
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .expense-item .delete {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        /* Japanese Phrases */
+        .phrase-category {
+            margin-bottom: 15px;
+        }
+
+        .phrase-category h3 {
+            font-size: 1rem;
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #feca57;
+        }
+
+        .phrase {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .phrase .jp {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .phrase .roma {
+            font-size: 0.85rem;
+            color: #ff6b6b;
+            margin-bottom: 3px;
+        }
+
+        .phrase .tw {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Emergency Card */
+        .emergency-card {
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+
+        .emergency-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .emergency-card p {
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
             margin-bottom: 10px;
         }
 
-        .temperature {
-            font-size: 4rem;
-            font-weight: 300;
-            color: #667eea;
-        }
-
-        .weather-icon {
-            font-size: 3rem;
-            margin: 10px 0;
-        }
-
-        .weather-desc {
-            color: #666;
-            font-size: 1.1rem;
-        }
-
-        .details {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            text-align: center;
-        }
-
-        .detail-item {
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-
-        .detail-label {
-            font-size: 0.8rem;
-            color: #999;
-            margin-bottom: 5px;
-        }
-
-        .detail-value {
-            font-size: 1.2rem;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .forecast {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-
-        .forecast h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.1rem;
-        }
-
-        .forecast-list {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-        }
-
-        .forecast-item {
-            flex: 0 0 auto;
-            text-align: center;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            min-width: 80px;
-        }
-
-        .forecast-day {
-            font-size: 0.8rem;
-            color: #666;
-            margin-bottom: 5px;
-        }
-
-        .forecast-icon {
-            font-size: 1.5rem;
-            margin: 5px 0;
-        }
-
-        .forecast-temp {
+        .info-card h4 {
             font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .info-card p {
+            font-size: 1rem;
             color: #333;
         }
 
-        .error {
-            background: #ffe0e0;
-            color: #c00;
-            padding: 15px 20px;
-            border-radius: 10px;
-            text-align: center;
-            display: none;
+        .editable {
+            width: 100%;
+            padding: 10px;
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            min-height: 60px;
         }
 
-        .error.show {
-            display: block;
-            animation: fadeIn 0.3s ease;
+        /* Itinerary */
+        .day-card {
+            margin-bottom: 15px;
         }
 
-        .loading {
-            text-align: center;
+        .day-header {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
             color: white;
-            font-size: 1.2rem;
+            padding: 15px;
+            border-radius: 15px 15px 0 0;
+            cursor: pointer;
+        }
+
+        .day-header h3 {
+            font-size: 1rem;
+            margin-bottom: 3px;
+        }
+
+        .day-header p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .day-content {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 0 0 15px 15px;
             display: none;
         }
 
-        .loading.show {
+        .day-content.show {
             display: block;
         }
 
-        .loading::after {
-            content: '';
-            animation: dots 1.5s infinite;
+        .schedule-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
 
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%, 100% { content: '...'; }
+        .schedule-item:last-child {
+            border-bottom: none;
+        }
+
+        .schedule-item .time {
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Weather */
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+        }
+
+        .weather-day {
+            text-align: center;
+            padding: 15px 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .weather-day .date {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .weather-day .icon {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .weather-day .temp {
+            font-size: 0.85rem;
+            color: #333;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 0.7rem;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+
+        .nav-item .icon {
+            font-size: 1.3rem;
+        }
+
+        .nav-item.active {
+            color: #ff6b6b;
+        }
+
+        .clear-btn {
+            background: #eee;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            color: #666;
+            cursor: pointer;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🌤️ 天氣查詢</h1>
-        
-        <div class="search-box">
-            <input type="text" id="cityInput" placeholder="輸入城市名稱 (例如: Tokyo, Osaka, Taipei)" 
-                   onkeypress="if(event.key==='Enter') searchWeather()">
-            <button onclick="searchWeather()" id="searchBtn">查詢</button>
+    <div class="header">
+        <h1>🇯🇵 大阪旅遊小幫手</h1>
+        <p>2026/2/9 - 2/15 親子7天6夜</p>
+    </div>
+
+    <!-- Currency Section -->
+    <div class="section active" id="currency">
+        <div class="card">
+            <h2>💴 匯率換算</h2>
+            <div class="currency-label">輸入金額</div>
+            <div class="converter-input">
+                <input type="number" id="twdInput" placeholder="台幣" oninput="convertCurrency('twd')">
+                <input type="number" id="jpyInput" placeholder="日幣" oninput="convertCurrency('jpy')">
+            </div>
+            <div class="result-box">
+                <div class="label">換算結果</div>
+                <div class="amount" id="convertResult">輸入金額開始換算</div>
+            </div>
+            <div class="rate-info">匯率：1 TWD = <span id="rateDisplay">4.65</span> JPY (可調整)</div>
+            <input type="range" id="rateSlider" min="4.0" max="5.5" step="0.01" value="4.65" 
+                   style="width:100%; margin-top:10px" oninput="updateRate()">
         </div>
 
-        <div class="loading" id="loading">正在查詢天氣</div>
-        <div class="error" id="error"></div>
-
-        <div class="weather-card" id="weatherCard">
-            <div class="current-weather">
-                <div class="city-name" id="cityName"></div>
-                <div class="weather-icon" id="weatherIcon"></div>
-                <div class="temperature" id="temperature"></div>
-                <div class="weather-desc" id="weatherDesc"></div>
-            </div>
-
-            <div class="details">
-                <div class="detail-item">
-                    <div class="detail-label">體感溫度</div>
-                    <div class="detail-value" id="feelsLike"></div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">濕度</div>
-                    <div class="detail-value" id="humidity"></div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">風速</div>
-                    <div class="detail-value" id="windSpeed"></div>
-                </div>
-            </div>
-
-            <div class="forecast">
-                <h3>📅 未來 7 天預報</h3>
-                <div class="forecast-list" id="forecastList"></div>
+        <div class="card">
+            <h2>🌤️ 大阪天氣預報</h2>
+            <div class="weather-grid" id="weatherGrid">
+                <div class="weather-day"><div class="date">載入中...</div></div>
             </div>
         </div>
     </div>
 
-    <script>
-        // Weather code to emoji mapping
-        const weatherCodeToEmoji = {
-            0: '☀️',   // Clear sky
-            1: '🌤️',  // Mainly clear
-            2: '⛅',   // Partly cloudy
-            3: '☁️',   // Overcast
-            45: '🌫️', // Fog
-            48: '🌫️', // Depositing rime fog
-            51: '🌧️', // Drizzle light
-            53: '🌧️', // Drizzle moderate
-            55: '🌧️', // Drizzle dense
-            61: '🌧️', // Rain slight
-            63: '🌧️', // Rain moderate
-            65: '🌧️', // Rain heavy
-            71: '🌨️', // Snow slight
-            73: '🌨️', // Snow moderate
-            75: '❄️',  // Snow heavy
-            77: '🌨️', // Snow grains
-            80: '🌧️', // Rain showers slight
-            81: '🌧️', // Rain showers moderate
-            82: '⛈️', // Rain showers violent
-            85: '🌨️', // Snow showers slight
-            86: '🌨️', // Snow showers heavy
-            95: '⛈️', // Thunderstorm
-            96: '⛈️', // Thunderstorm with hail
-            99: '⛈️', // Thunderstorm with heavy hail
-        };
+    <!-- Expense Section -->
+    <div class="section" id="expense">
+        <div class="card">
+            <h2>📝 旅行記帳</h2>
+            <div class="expense-form">
+                <input type="number" id="expenseAmount" placeholder="金額">
+                <select id="expenseCategory">
+                    <option value="🍜 餐飲">🍜 餐</option>
+                    <option value="🚃 交通">🚃 交</option>
+                    <option value="🎢 門票">🎢 票</option>
+                    <option value="🛍️ 購物">🛍️ 購</option>
+                    <option value="🏨 住宿">🏨 住</option>
+                    <option value="📦 其他">📦 他</option>
+                </select>
+                <input type="text" id="expenseNote" placeholder="備註">
+                <button class="add-btn" onclick="addExpense()">+</button>
+            </div>
+            <div class="expense-summary">
+                <div class="summary-box">
+                    <div class="amount" id="totalJpy">¥0</div>
+                    <div class="label">總花費 (日幣)</div>
+                </div>
+                <div class="summary-box">
+                    <div class="amount" id="totalTwd">NT$0</div>
+                    <div class="label">總花費 (台幣)</div>
+                </div>
+            </div>
+            <div class="expense-list" id="expenseList"></div>
+            <button class="clear-btn" onclick="clearExpenses()">清除所有記錄</button>
+        </div>
+    </div>
 
-        const weatherCodeToDesc = {
-            0: '晴朗',
-            1: '大致晴朗',
-            2: '多雲',
-            3: '陰天',
-            45: '霧',
-            48: '霧',
-            51: '毛毛雨',
-            53: '毛毛雨',
-            55: '毛毛雨',
-            61: '小雨',
-            63: '中雨',
-            65: '大雨',
-            71: '小雪',
-            73: '中雪',
-            75: '大雪',
-            77: '雪粒',
-            80: '陣雨',
-            81: '陣雨',
-            82: '暴雨',
-            85: '陣雪',
-            86: '大陣雪',
-            95: '雷雨',
-            96: '冰雹雷雨',
-            99: '強冰雹雷雨',
-        };
-
-        const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
-
-        async function searchWeather() {
-            const cityInput = document.getElementById('cityInput');
-            const city = cityInput.value.trim();
+    <!-- Japanese Section -->
+    <div class="section" id="japanese">
+        <div class="card">
+            <h2>🗣️ 實用日文</h2>
             
-            if (!city) {
-                showError('請輸入城市名稱');
-                return;
+            <div class="phrase-category">
+                <h3>👋 基本問候</h3>
+                <div class="phrase">
+                    <div class="jp">すみません</div>
+                    <div class="roma">Sumimasen</div>
+                    <div class="tw">不好意思 / 請問</div>
+                </div>
+                <div class="phrase">
+                    <div class="jp">ありがとうございます</div>
+                    <div class="roma">Arigatou gozaimasu</div>
+                    <div class="tw">非常感謝</div>
+                </div>
+            </div>
+
+            <div class="phrase-category">
+                <h3>🍜 餐廳用語</h3>
+                <div class="phrase">
+                    <div class="jp">◯名です</div>
+                    <div class="roma">◯ mei desu</div>
+                    <div class="tw">◯位 (2名=ni mei)</div>
+                </div>
+                <div class="phrase">
+                    <div class="jp">これをください</div>
+                    <div class="roma">Kore wo kudasai</div>
+                    <div class="tw">請給我這個</div>
+                </div>
+                <div class="phrase">
+                    <div class="jp">お会計お願いします</div>
+                    <div class="roma">Okaikei onegaishimasu</div>
+                    <div class="tw">請結帳</div>
+                </div>
+                <div class="phrase">
+                    <div class="jp">美味しいです！</div>
+                    <div class="roma">Oishii desu!</div>
+                    <div class="tw">很好吃！</div>
+                </div>
+            </div>
+
+            <div class="phrase-category">
+                <h3>🛍️ 購物用語</h3>
+                <div class="phrase">
+                    <div class="jp">いくらですか？</div>
+                    <div class="roma">Ikura desu ka?</div>
+                    <div class="tw">多少錢？</div>
+                </div>
+                <div class="phrase">
+                    <div class="jp">免税できますか？</div>
+                    <div class="roma">Menzei dekimasu ka?</div>
+                    <div class="tw">可以免稅嗎？</div>
+                </div>
+                <div class="phrase">
+                    <div class="jp">カードで払えますか？</div>
+                    <div class="roma">Kaado de haraemasu ka?</div>
+                    <div class="tw">可以刷卡嗎？</div>
+                </div>
+            </div>
+
+            <div class="phrase-category">
+                <h3>🚃 交通用語</h3>
+                <div class="phrase">
+                    <div class="jp">◯◯駅はどこですか？</div>
+                    <div class="roma">◯◯ eki wa doko desu ka?</div>
+                    <div class="tw">◯◯車站在哪裡？</div>
+                </div>
+                <div class="phrase">
+                    <div class="jp">この電車は◯◯に止まりますか？</div>
+                    <div class="roma">Kono densha wa ◯◯ ni tomarimasu ka?</div>
+                    <div class="tw">這班電車有停◯◯嗎？</div>
+                </div>
+            </div>
+
+            <div class="phrase-category">
+                <h3>🆘 緊急用語</h3>
+                <div class="phrase">
+                    <div class="jp">助けてください！</div>
+                    <div class="roma">Tasukete kudasai!</div>
+                    <div class="tw">請幫幫我！</div>
+                </div>
+                <div class="phrase">
+                    <div class="jp">病院はどこですか？</div>
+                    <div class="roma">Byouin wa doko desu ka?</div>
+                    <div class="tw">醫院在哪裡？</div>
+                </div>
+                <div class="phrase">
+                    <div class="jp">警察を呼んでください</div>
+                    <div class="roma">Keisatsu wo yonde kudasai</div>
+                    <div class="tw">請叫警察</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Itinerary Section -->
+    <div class="section" id="itinerary">
+        <div class="card">
+            <h2>📅 行程表</h2>
+            
+            <div class="day-card">
+                <div class="day-header" onclick="toggleDay(1)">
+                    <h3>Day 1 - 2/9 (一)</h3>
+                    <p>抵達 & 環球影城前哨戰</p>
+                </div>
+                <div class="day-content" id="day1">
+                    <div class="schedule-item"><span class="time">12:00</span> 抵達民宿 (心齋橋/長堀橋) 寄放行李</div>
+                    <div class="schedule-item"><span class="time">12:30</span> 午餐：民宿附近快速解決</div>
+                    <div class="schedule-item"><span class="time">13:30</span> 出發搭電車前往環球影城</div>
+                    <div class="schedule-item"><span class="time">15:00</span> <span class="highlight">🎢 USJ 入場</span> (1.5日券)
+                        <br>• 體驗氣氛、玩中小設施
+                        <br>• App 抽任天堂整理券</div>
+                    <div class="schedule-item"><span class="time">20:00</span> 回民宿休息</div>
+                </div>
+            </div>
+
+            <div class="day-card">
+                <div class="day-header" onclick="toggleDay(2)">
+                    <h3>Day 2 - 2/10 (二)</h3>
+                    <p>環球影城決戰日 🎢</p>
+                </div>
+                <div class="day-content" id="day2">
+                    <div class="schedule-item"><span class="time">08:00</span> 抵達 USJ 門口排隊</div>
+                    <div class="schedule-item"><span class="time">09:00</span> <span class="highlight">🎮 直衝任天堂世界</span></div>
+                    <div class="schedule-item"><span class="time">全天</span> 暢遊 USJ
+                        <br>• 柯南密室逃脫 (需預約)
+                        <br>• 各大設施</div>
+                    <div class="schedule-item"><span class="time">19:00</span> CityWalk 晚餐</div>
+                </div>
+            </div>
+
+            <div class="day-card">
+                <div class="day-header" onclick="toggleDay(3)">
+                    <h3>Day 3 - 2/11 (三) 🎌 國定假日</h3>
+                    <p>郊區玩雪 & 周邊順遊</p>
+                </div>
+                <div class="day-content" id="day3">
+                    <div class="schedule-item"><span class="time">10:00</span> <span class="highlight">⛷️ 枚方公園</span> (Hirakata Park)
+                        <br>• Winter Carnival 玩雪/溜冰</div>
+                    <div class="schedule-item"><span class="time">16:30</span> 離開枚方公園</div>
+                    <div class="schedule-item"><span class="time">17:00</span> 傍晚二選一：
+                        <br>A. 枚方 T-SITE (7米書牆)
+                        <br>B. KUZUHA MALL (大商場)</div>
+                    <div class="schedule-item"><span class="time">19:00</span> <span class="highlight">🥩 燒肉大餐</span>
+                        <br>⚠️ 假日務必提前訂位！</div>
+                </div>
+            </div>
+
+            <div class="day-card">
+                <div class="day-header" onclick="toggleDay(4)">
+                    <h3>Day 4 - 2/12 (四)</h3>
+                    <p>海灣一日遊 (周遊卡 Day 1)</p>
+                </div>
+                <div class="day-content" id="day4">
+                    <div class="schedule-item"><span class="time">09:30</span> 前往大阪港</div>
+                    <div class="schedule-item"><span class="time">10:00</span> <span class="highlight">🧱 大阪樂高樂園</span>
+                        <br>⚠️ 記得提前預約上午場！</div>
+                    <div class="schedule-item"><span class="time">12:30</span> 天保山 Market Place 午餐</div>
+                    <div class="schedule-item"><span class="time">14:00</span> 🐠 海遊館 (門票自費)</div>
+                    <div class="schedule-item"><span class="time">16:30</span> 🚢 聖瑪麗亞號觀光船 (周遊卡免費)</div>
+                    <div class="schedule-item"><span class="time">17:30</span> 🎡 天保山大摩天輪 (周遊卡免費)</div>
+                </div>
+            </div>
+
+            <div class="day-card">
+                <div class="day-header" onclick="toggleDay(5)">
+                    <h3>Day 5 - 2/13 (五)</h3>
+                    <p>柯南、動物園與夜景 (周遊卡 Day 2)</p>
+                </div>
+                <div class="day-content" id="day5">
+                    <div class="schedule-item"><span class="time">09:00</span> <span class="highlight">🕵️ 讀賣電視台 (YTV)</span>
+                        <br>柯南雕像巡禮 (大阪商務園區站)</div>
+                    <div class="schedule-item"><span class="time">11:00</span> 🦁 天王寺動物園 (周遊卡免費)</div>
+                    <div class="schedule-item"><span class="time">15:00</span> 下午茶/休息 (MIO 或 Q's Mall)</div>
+                    <div class="schedule-item"><span class="time">16:30</span> <span class="highlight">🌃 阿倍野 Harukas 300</span>
+                        <br>展望台看日落至夜景</div>
+                    <div class="schedule-item"><span class="time">19:30</span> 🛶 道頓堀水上觀光船 (周遊卡免費)</div>
+                </div>
+            </div>
+
+            <div class="day-card">
+                <div class="day-header" onclick="toggleDay(6)">
+                    <h3>Day 6 - 2/14 (六) ❤️</h3>
+                    <p>角色補完 & 通天閣新世界</p>
+                </div>
+                <div class="day-content" id="day6">
+                    <div class="schedule-item"><span class="time">10:00</span> <span class="highlight">🛍️ 大丸百貨心齋橋店 9F</span>
+                        <br>• 哆啦A夢未來百貨
+                        <br>• Pokemon Center</div>
+                    <div class="schedule-item"><span class="time">12:00</span> 🦀 黑門市場 (和牛、海鮮)</div>
+                    <div class="schedule-item"><span class="time">13:30</span> 🎮 日本橋電器街 (動漫、轉蛋)</div>
+                    <div class="schedule-item"><span class="time">15:30</span> <span class="highlight">🗼 通天閣 & 新世界</span>
+                        <br>• Tower Slider 溜滑梯 (自費)
+                        <br>• 串炸晚餐</div>
+                    <div class="schedule-item"><span class="time">18:00</span> 回心齋橋最後補貨</div>
+                </div>
+            </div>
+
+            <div class="day-card">
+                <div class="day-header" onclick="toggleDay(7)">
+                    <h3>Day 7 - 2/15 (日)</h3>
+                    <p>移動日 & Outlet</p>
+                </div>
+                <div class="day-content" id="day7">
+                    <div class="schedule-item"><span class="time">上午</span> 退房，移動至臨空城住宿</div>
+                    <div class="schedule-item"><span class="time">下午</span> <span class="highlight">🛍️ Rinku Premium Outlets</span>
+                        <br>最後採買！</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Section -->
+    <div class="section" id="emergency">
+        <div class="card">
+            <h2>🆘 緊急資訊</h2>
+            
+            <div class="emergency-card">
+                <h3>📞 緊急電話</h3>
+                <p>警察：<strong>110</strong></p>
+                <p>火災/急救：<strong>119</strong></p>
+                <p>台灣駐日代表處：<strong>03-3280-7811</strong></p>
+            </div>
+
+            <div class="info-card">
+                <h4>🏨 住宿地址 (給司機看)</h4>
+                <textarea class="editable" id="hotelAddress" placeholder="輸入你的民宿/飯店地址（日文）"
+                    oninput="saveEmergencyInfo()">心齋橋/長堀橋 民宿
+（請在此輸入詳細地址）</textarea>
+            </div>
+
+            <div class="info-card">
+                <h4>📋 護照資訊</h4>
+                <textarea class="editable" id="passportInfo" placeholder="護照號碼等重要資訊"
+                    oninput="saveEmergencyInfo()">護照號碼：
+有效期限：</textarea>
+            </div>
+
+            <div class="info-card">
+                <h4>💊 過敏/疾病 (給醫生看)</h4>
+                <textarea class="editable" id="medicalInfo" placeholder="藥物過敏、慢性病等"
+                    oninput="saveEmergencyInfo()">アレルギー (過敏)：
+持病 (慢性病)：</textarea>
+            </div>
+
+            <div class="info-card">
+                <h4>📱 緊急聯絡人</h4>
+                <textarea class="editable" id="emergencyContact" placeholder="台灣家人聯絡方式"
+                    oninput="saveEmergencyInfo()">姓名：
+電話：</textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="showSection('currency')">
+            <span class="icon">💴</span>
+            <span>匯率</span>
+        </button>
+        <button class="nav-item" onclick="showSection('expense')">
+            <span class="icon">📝</span>
+            <span>記帳</span>
+        </button>
+        <button class="nav-item" onclick="showSection('japanese')">
+            <span class="icon">🗣️</span>
+            <span>日文</span>
+        </button>
+        <button class="nav-item" onclick="showSection('itinerary')">
+            <span class="icon">📅</span>
+            <span>行程</span>
+        </button>
+        <button class="nav-item" onclick="showSection('emergency')">
+            <span class="icon">🆘</span>
+            <span>緊急</span>
+        </button>
+    </div>
+
+    <script>
+        // Exchange rate
+        let exchangeRate = 4.65;
+
+        function updateRate() {
+            exchangeRate = parseFloat(document.getElementById('rateSlider').value);
+            document.getElementById('rateDisplay').textContent = exchangeRate.toFixed(2);
+            convertCurrency('twd');
+        }
+
+        function convertCurrency(source) {
+            const twdInput = document.getElementById('twdInput');
+            const jpyInput = document.getElementById('jpyInput');
+            const result = document.getElementById('convertResult');
+
+            if (source === 'twd' && twdInput.value) {
+                const twd = parseFloat(twdInput.value);
+                const jpy = Math.round(twd * exchangeRate);
+                jpyInput.value = jpy;
+                result.textContent = `NT$${twd.toLocaleString()} = ¥${jpy.toLocaleString()}`;
+            } else if (source === 'jpy' && jpyInput.value) {
+                const jpy = parseFloat(jpyInput.value);
+                const twd = Math.round(jpy / exchangeRate);
+                twdInput.value = twd;
+                result.textContent = `¥${jpy.toLocaleString()} = NT$${twd.toLocaleString()}`;
+            } else {
+                result.textContent = '輸入金額開始換算';
             }
+        }
 
-            const searchBtn = document.getElementById('searchBtn');
-            const loading = document.getElementById('loading');
-            const weatherCard = document.getElementById('weatherCard');
-            const error = document.getElementById('error');
+        // Expense tracker
+        let expenses = JSON.parse(localStorage.getItem('osaka_expenses') || '[]');
 
-            searchBtn.disabled = true;
-            loading.classList.add('show');
-            weatherCard.classList.remove('show');
-            error.classList.remove('show');
+        function addExpense() {
+            const amount = document.getElementById('expenseAmount').value;
+            const category = document.getElementById('expenseCategory').value;
+            const note = document.getElementById('expenseNote').value;
 
+            if (!amount) return;
+
+            expenses.push({
+                id: Date.now(),
+                amount: parseFloat(amount),
+                category,
+                note,
+                date: new Date().toLocaleDateString('zh-TW')
+            });
+
+            localStorage.setItem('osaka_expenses', JSON.stringify(expenses));
+            document.getElementById('expenseAmount').value = '';
+            document.getElementById('expenseNote').value = '';
+            renderExpenses();
+        }
+
+        function deleteExpense(id) {
+            expenses = expenses.filter(e => e.id !== id);
+            localStorage.setItem('osaka_expenses', JSON.stringify(expenses));
+            renderExpenses();
+        }
+
+        function clearExpenses() {
+            if (confirm('確定要清除所有記錄嗎？')) {
+                expenses = [];
+                localStorage.setItem('osaka_expenses', JSON.stringify(expenses));
+                renderExpenses();
+            }
+        }
+
+        function renderExpenses() {
+            const list = document.getElementById('expenseList');
+            const totalJpy = expenses.reduce((sum, e) => sum + e.amount, 0);
+            const totalTwd = Math.round(totalJpy / exchangeRate);
+
+            document.getElementById('totalJpy').textContent = `¥${totalJpy.toLocaleString()}`;
+            document.getElementById('totalTwd').textContent = `NT$${totalTwd.toLocaleString()}`;
+
+            list.innerHTML = expenses.slice().reverse().map(e => `
+                <div class="expense-item">
+                    <div class="info">
+                        <div>${e.note || e.category}</div>
+                        <div class="category">${e.category} · ${e.date}</div>
+                    </div>
+                    <div class="amount">¥${e.amount.toLocaleString()}</div>
+                    <button class="delete" onclick="deleteExpense(${e.id})">×</button>
+                </div>
+            `).join('');
+        }
+
+        // Section navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Itinerary toggle
+        function toggleDay(day) {
+            const content = document.getElementById('day' + day);
+            content.classList.toggle('show');
+        }
+
+        // Emergency info save/load
+        function saveEmergencyInfo() {
+            const info = {
+                hotelAddress: document.getElementById('hotelAddress').value,
+                passportInfo: document.getElementById('passportInfo').value,
+                medicalInfo: document.getElementById('medicalInfo').value,
+                emergencyContact: document.getElementById('emergencyContact').value
+            };
+            localStorage.setItem('osaka_emergency', JSON.stringify(info));
+        }
+
+        function loadEmergencyInfo() {
+            const info = JSON.parse(localStorage.getItem('osaka_emergency') || '{}');
+            if (info.hotelAddress) document.getElementById('hotelAddress').value = info.hotelAddress;
+            if (info.passportInfo) document.getElementById('passportInfo').value = info.passportInfo;
+            if (info.medicalInfo) document.getElementById('medicalInfo').value = info.medicalInfo;
+            if (info.emergencyContact) document.getElementById('emergencyContact').value = info.emergencyContact;
+        }
+
+        // Weather
+        async function loadWeather() {
             try {
-                // First, geocode the city name
-                const geoResponse = await fetch(
-                    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh`
-                );
-                const geoData = await geoResponse.json();
-
-                if (!geoData.results || geoData.results.length === 0) {
-                    throw new Error('找不到該城市，請確認城市名稱');
-                }
-
-                const location = geoData.results[0];
-                const { latitude, longitude, name, country } = location;
-
-                // Then fetch weather data
-                const weatherResponse = await fetch(
-                    `https://api.open-meteo.com/v1/forecast?` +
-                    `latitude=${latitude}&longitude=${longitude}` +
-                    `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m` +
-                    `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
-                    `&timezone=auto&forecast_days=7`
-                );
-                const weatherData = await weatherResponse.json();
-
-                displayWeather(name, country, weatherData);
-
-            } catch (err) {
-                showError(err.message || '查詢失敗，請稍後再試');
-            } finally {
-                searchBtn.disabled = false;
-                loading.classList.remove('show');
-            }
-        }
-
-        function displayWeather(cityName, country, data) {
-            const current = data.current;
-            const daily = data.daily;
-
-            // Current weather
-            document.getElementById('cityName').textContent = `${cityName}, ${country}`;
-            document.getElementById('weatherIcon').textContent = weatherCodeToEmoji[current.weather_code] || '🌡️';
-            document.getElementById('temperature').textContent = `${Math.round(current.temperature_2m)}°C`;
-            document.getElementById('weatherDesc').textContent = weatherCodeToDesc[current.weather_code] || '未知';
-            document.getElementById('feelsLike').textContent = `${Math.round(current.apparent_temperature)}°C`;
-            document.getElementById('humidity').textContent = `${current.relative_humidity_2m}%`;
-            document.getElementById('windSpeed').textContent = `${current.wind_speed_10m} km/h`;
-
-            // Forecast
-            const forecastList = document.getElementById('forecastList');
-            forecastList.innerHTML = '';
-
-            for (let i = 0; i < daily.time.length; i++) {
-                const date = new Date(daily.time[i]);
-                const dayName = i === 0 ? '今天' : `週${dayNames[date.getDay()]}`;
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=34.69&longitude=135.50&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia/Tokyo&forecast_days=7');
+                const data = await res.json();
                 
-                const item = document.createElement('div');
-                item.className = 'forecast-item';
-                item.innerHTML = `
-                    <div class="forecast-day">${dayName}</div>
-                    <div class="forecast-icon">${weatherCodeToEmoji[daily.weather_code[i]] || '🌡️'}</div>
-                    <div class="forecast-temp">${Math.round(daily.temperature_2m_max[i])}° / ${Math.round(daily.temperature_2m_min[i])}°</div>
-                `;
-                forecastList.appendChild(item);
+                const weatherCodes = {
+                    0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️', 45: '🌫️', 48: '🌫️',
+                    51: '🌧️', 53: '🌧️', 55: '🌧️', 61: '🌧️', 63: '🌧️', 65: '🌧️',
+                    71: '🌨️', 73: '🌨️', 75: '❄️', 80: '🌧️', 81: '🌧️', 82: '⛈️',
+                    95: '⛈️', 96: '⛈️', 99: '⛈️'
+                };
+                
+                const grid = document.getElementById('weatherGrid');
+                grid.innerHTML = data.daily.time.map((date, i) => {
+                    const d = new Date(date);
+                    const day = ['日','一','二','三','四','五','六'][d.getDay()];
+                    return `
+                        <div class="weather-day">
+                            <div class="date">${d.getMonth()+1}/${d.getDate()} ${day}</div>
+                            <div class="icon">${weatherCodes[data.daily.weathercode[i]] || '🌡️'}</div>
+                            <div class="temp">${Math.round(data.daily.temperature_2m_max[i])}°/${Math.round(data.daily.temperature_2m_min[i])}°</div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                document.getElementById('weatherGrid').innerHTML = '<div class="weather-day"><div class="date">無法載入天氣</div></div>';
             }
-
-            document.getElementById('weatherCard').classList.add('show');
         }
 
-        function showError(message) {
-            const error = document.getElementById('error');
-            error.textContent = message;
-            error.classList.add('show');
-        }
-
-        // Auto-focus on input
-        document.getElementById('cityInput').focus();
+        // Init
+        renderExpenses();
+        loadEmergencyInfo();
+        loadWeather();
     </script>
 </body>
 </html>
