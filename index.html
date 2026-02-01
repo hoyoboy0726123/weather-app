@@ -857,40 +857,117 @@
             }
         }
 
-        // Expense tracker
-        let expenses = JSON.parse(localStorage.getItem('osaka_expenses') || '[]');
+        // IndexedDB for expense tracker
+        let db;
+        let expenses = [];
+        const DB_NAME = 'OsakaTravelDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'expenses';
 
-        function addExpense() {
+        // Initialize IndexedDB
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    if (!database.objectStoreNames.contains(STORE_NAME)) {
+                        database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+
+        // Load all expenses from IndexedDB
+        async function loadExpenses() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(STORE_NAME, 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+                
+                request.onsuccess = () => {
+                    expenses = request.result || [];
+                    resolve(expenses);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Save expense to IndexedDB
+        async function saveExpense(expense) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(STORE_NAME, 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.put(expense);
+                
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Delete expense from IndexedDB
+        async function removeExpense(id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(STORE_NAME, 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.delete(id);
+                
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Clear all expenses from IndexedDB
+        async function clearAllExpenses() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(STORE_NAME, 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.clear();
+                
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function addExpense() {
             const amount = document.getElementById('expenseAmount').value;
             const category = document.getElementById('expenseCategory').value;
             const note = document.getElementById('expenseNote').value;
 
             if (!amount) return;
 
-            expenses.push({
+            const expense = {
                 id: Date.now(),
                 amount: parseFloat(amount),
                 category,
                 note,
                 date: new Date().toLocaleDateString('zh-TW')
-            });
+            };
 
-            localStorage.setItem('osaka_expenses', JSON.stringify(expenses));
+            expenses.push(expense);
+            await saveExpense(expense);
+            
             document.getElementById('expenseAmount').value = '';
             document.getElementById('expenseNote').value = '';
             renderExpenses();
         }
 
-        function deleteExpense(id) {
+        async function deleteExpense(id) {
             expenses = expenses.filter(e => e.id !== id);
-            localStorage.setItem('osaka_expenses', JSON.stringify(expenses));
+            await removeExpense(id);
             renderExpenses();
         }
 
-        function clearExpenses() {
+        async function clearExpenses() {
             if (confirm('確定要清除所有記錄嗎？')) {
                 expenses = [];
-                localStorage.setItem('osaka_expenses', JSON.stringify(expenses));
+                await clearAllExpenses();
                 renderExpenses();
             }
         }
@@ -995,9 +1072,15 @@
         }
 
         // Init
-        renderExpenses();
-        loadEmergencyInfo();
-        loadWeather();
+        async function init() {
+            await initDB();
+            await loadExpenses();
+            renderExpenses();
+            loadEmergencyInfo();
+            loadWeather();
+        }
+        
+        init();
     </script>
 </body>
 </html>
