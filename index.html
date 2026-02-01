@@ -508,7 +508,7 @@
         </div>
 
         <div class="card">
-            <h2>🌤️ 大阪天氣預報</h2>
+            <h2>🌤️ 旅行期間天氣 (2/9-15)</h2>
             <div class="weather-grid" id="weatherGrid">
                 <div class="weather-day"><div class="date">載入中...</div></div>
             </div>
@@ -948,10 +948,11 @@
             if (info.emergencyContact) document.getElementById('emergencyContact').value = info.emergencyContact;
         }
 
-        // Weather
+        // Weather - 顯示旅行期間 2/9 - 2/15 的天氣
         async function loadWeather() {
             try {
-                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=34.69&longitude=135.50&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia/Tokyo&forecast_days=7');
+                // 取得 16 天預報以涵蓋旅行日期
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=34.69&longitude=135.50&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia/Tokyo&forecast_days=16');
                 const data = await res.json();
                 
                 const weatherCodes = {
@@ -960,19 +961,34 @@
                     71: '🌨️', 73: '🌨️', 75: '❄️', 80: '🌧️', 81: '🌧️', 82: '⛈️',
                     95: '⛈️', 96: '⛈️', 99: '⛈️'
                 };
+
+                // 旅行日期：2026/2/9 - 2/15
+                const tripStart = '2026-02-09';
+                const tripEnd = '2026-02-15';
                 
                 const grid = document.getElementById('weatherGrid');
-                grid.innerHTML = data.daily.time.map((date, i) => {
-                    const d = new Date(date);
-                    const day = ['日','一','二','三','四','五','六'][d.getDay()];
-                    return `
-                        <div class="weather-day">
-                            <div class="date">${d.getMonth()+1}/${d.getDate()} ${day}</div>
-                            <div class="icon">${weatherCodes[data.daily.weathercode[i]] || '🌡️'}</div>
-                            <div class="temp">${Math.round(data.daily.temperature_2m_max[i])}°/${Math.round(data.daily.temperature_2m_min[i])}°</div>
-                        </div>
-                    `;
-                }).join('');
+                const tripDays = [];
+                
+                data.daily.time.forEach((date, i) => {
+                    if (date >= tripStart && date <= tripEnd) {
+                        const d = new Date(date);
+                        const day = ['日','一','二','三','四','五','六'][d.getDay()];
+                        const dayNum = Math.floor((new Date(date) - new Date(tripStart)) / 86400000) + 1;
+                        tripDays.push(`
+                            <div class="weather-day">
+                                <div class="date">D${dayNum} ${d.getMonth()+1}/${d.getDate()}</div>
+                                <div class="icon">${weatherCodes[data.daily.weathercode[i]] || '🌡️'}</div>
+                                <div class="temp">${Math.round(data.daily.temperature_2m_max[i])}°/${Math.round(data.daily.temperature_2m_min[i])}°</div>
+                            </div>
+                        `);
+                    }
+                });
+                
+                if (tripDays.length > 0) {
+                    grid.innerHTML = tripDays.join('');
+                } else {
+                    grid.innerHTML = '<div class="weather-day"><div class="date">天氣預報將於出發前一週更新</div></div>';
+                }
             } catch (e) {
                 document.getElementById('weatherGrid').innerHTML = '<div class="weather-day"><div class="date">無法載入天氣</div></div>';
             }
