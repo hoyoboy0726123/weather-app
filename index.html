@@ -283,10 +283,38 @@
             margin-bottom: 8px;
         }
 
+        .phrase {
+            position: relative;
+        }
+
         .phrase .jp {
             font-size: 1.1rem;
             color: #333;
             margin-bottom: 3px;
+            padding-right: 40px;
+        }
+
+        .speak-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: #ff6b6b;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .speak-btn:active {
+            transform: scale(0.95);
+            background: #e74c3c;
         }
 
         .phrase .roma {
@@ -555,11 +583,13 @@
             <div class="phrase-category">
                 <h3>👋 基本問候</h3>
                 <div class="phrase">
+                    <button class="speak-btn" onclick="speak('すみません')">🔊</button>
                     <div class="jp">すみません</div>
                     <div class="roma">Sumimasen</div>
                     <div class="tw">不好意思 / 請問</div>
                 </div>
                 <div class="phrase">
+                    <button class="speak-btn" onclick="speak('ありがとうございます')">🔊</button>
                     <div class="jp">ありがとうございます</div>
                     <div class="roma">Arigatou gozaimasu</div>
                     <div class="tw">非常感謝</div>
@@ -569,21 +599,25 @@
             <div class="phrase-category">
                 <h3>🍜 餐廳用語</h3>
                 <div class="phrase">
+                    <button class="speak-btn" onclick="speak('二名です')">🔊</button>
                     <div class="jp">◯名です</div>
                     <div class="roma">◯ mei desu</div>
                     <div class="tw">◯位 (2名=ni mei)</div>
                 </div>
                 <div class="phrase">
+                    <button class="speak-btn" onclick="speak('これをください')">🔊</button>
                     <div class="jp">これをください</div>
                     <div class="roma">Kore wo kudasai</div>
                     <div class="tw">請給我這個</div>
                 </div>
                 <div class="phrase">
+                    <button class="speak-btn" onclick="speak('お会計お願いします')">🔊</button>
                     <div class="jp">お会計お願いします</div>
                     <div class="roma">Okaikei onegaishimasu</div>
                     <div class="tw">請結帳</div>
                 </div>
                 <div class="phrase">
+                    <button class="speak-btn" onclick="speak('美味しいです')">🔊</button>
                     <div class="jp">美味しいです！</div>
                     <div class="roma">Oishii desu!</div>
                     <div class="tw">很好吃！</div>
@@ -593,16 +627,19 @@
             <div class="phrase-category">
                 <h3>🛍️ 購物用語</h3>
                 <div class="phrase">
+                    <button class="speak-btn" onclick="speak('いくらですか')">🔊</button>
                     <div class="jp">いくらですか？</div>
                     <div class="roma">Ikura desu ka?</div>
                     <div class="tw">多少錢？</div>
                 </div>
                 <div class="phrase">
+                    <button class="speak-btn" onclick="speak('免税できますか')">🔊</button>
                     <div class="jp">免税できますか？</div>
                     <div class="roma">Menzei dekimasu ka?</div>
                     <div class="tw">可以免稅嗎？</div>
                 </div>
                 <div class="phrase">
+                    <button class="speak-btn" onclick="speak('カードで払えますか')">🔊</button>
                     <div class="jp">カードで払えますか？</div>
                     <div class="roma">Kaado de haraemasu ka?</div>
                     <div class="tw">可以刷卡嗎？</div>
@@ -612,11 +649,13 @@
             <div class="phrase-category">
                 <h3>🚃 交通用語</h3>
                 <div class="phrase">
+                    <button class="speak-btn" onclick="speak('梅田駅はどこですか')">🔊</button>
                     <div class="jp">◯◯駅はどこですか？</div>
                     <div class="roma">◯◯ eki wa doko desu ka?</div>
                     <div class="tw">◯◯車站在哪裡？</div>
                 </div>
                 <div class="phrase">
+                    <button class="speak-btn" onclick="speak('この電車は梅田に止まりますか')">🔊</button>
                     <div class="jp">この電車は◯◯に止まりますか？</div>
                     <div class="roma">Kono densha wa ◯◯ ni tomarimasu ka?</div>
                     <div class="tw">這班電車有停◯◯嗎？</div>
@@ -626,16 +665,19 @@
             <div class="phrase-category">
                 <h3>🆘 緊急用語</h3>
                 <div class="phrase">
+                    <button class="speak-btn" onclick="speak('助けてください')">🔊</button>
                     <div class="jp">助けてください！</div>
                     <div class="roma">Tasukete kudasai!</div>
                     <div class="tw">請幫幫我！</div>
                 </div>
                 <div class="phrase">
+                    <button class="speak-btn" onclick="speak('病院はどこですか')">🔊</button>
                     <div class="jp">病院はどこですか？</div>
                     <div class="roma">Byouin wa doko desu ka?</div>
                     <div class="tw">醫院在哪裡？</div>
                 </div>
                 <div class="phrase">
+                    <button class="speak-btn" onclick="speak('警察を呼んでください')">🔊</button>
                     <div class="jp">警察を呼んでください</div>
                     <div class="roma">Keisatsu wo yonde kudasai</div>
                     <div class="tw">請叫警察</div>
@@ -1069,6 +1111,33 @@
             } catch (e) {
                 document.getElementById('weatherGrid').innerHTML = '<div class="weather-day"><div class="date">無法載入天氣</div></div>';
             }
+        }
+
+        // Japanese Text-to-Speech
+        function speak(text) {
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ja-JP';
+            utterance.rate = 0.9; // Slightly slower for clarity
+            utterance.pitch = 1.0;
+            
+            // Try to use a Japanese voice if available
+            const voices = window.speechSynthesis.getVoices();
+            const jpVoice = voices.find(voice => voice.lang.startsWith('ja'));
+            if (jpVoice) {
+                utterance.voice = jpVoice;
+            }
+            
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Load voices (needed for some browsers)
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => {
+                speechSynthesis.getVoices();
+            };
         }
 
         // Init
