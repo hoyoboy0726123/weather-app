@@ -509,6 +509,92 @@
             cursor: pointer;
             margin-top: 10px;
         }
+
+        /* Translator */
+        .translator-box {
+            margin-bottom: 20px;
+        }
+
+        .translator-box textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        .translator-box textarea:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+
+        .translate-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: transform 0.2s;
+        }
+
+        .translate-btn:active {
+            transform: scale(0.98);
+        }
+
+        .translate-result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            min-height: 60px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .result-text {
+            font-size: 1.1rem;
+            color: #333;
+            line-height: 1.6;
+            padding-right: 50px;
+        }
+
+        .result-text.loading {
+            color: #999;
+            font-style: italic;
+        }
+
+        .speak-result-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .speak-result-btn:active {
+            transform: scale(0.95);
+            background: #e74c3c;
+        }
+
+        .translate-info {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #999;
+        }
     </style>
 </head>
 <body>
@@ -577,6 +663,21 @@
 
     <!-- Japanese Section -->
     <div class="section" id="japanese">
+        <div class="card">
+            <h2>🌐 即時翻譯</h2>
+            <div class="translator-box">
+                <textarea id="translateInput" placeholder="輸入中文或日文..." rows="3"></textarea>
+                <button class="translate-btn" onclick="translateText()">翻譯 🔄</button>
+                <div class="translate-result" id="translateResult">
+                    <div class="result-text" id="resultText">翻譯結果會顯示在這裡</div>
+                    <button class="speak-result-btn" id="speakResultBtn" onclick="speakResult()" style="display:none;">
+                        🔊 發音
+                    </button>
+                </div>
+                <div class="translate-info">使用 MyMemory 翻譯引擎 · 每日 1000 次</div>
+            </div>
+        </div>
+
         <div class="card">
             <h2>🗣️ 實用日文</h2>
             
@@ -1132,6 +1233,94 @@
             
             window.speechSynthesis.speak(utterance);
         }
+
+        // Translation
+        let lastTranslation = '';
+        let lastTranslationLang = 'ja';
+
+        // Detect if text is primarily Japanese
+        function isJapanese(text) {
+            const japaneseRegex = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/;
+            return japaneseRegex.test(text);
+        }
+
+        async function translateText() {
+            const input = document.getElementById('translateInput').value.trim();
+            const resultDiv = document.getElementById('resultText');
+            const speakBtn = document.getElementById('speakResultBtn');
+            
+            if (!input) {
+                resultDiv.textContent = '請輸入要翻譯的文字';
+                resultDiv.className = 'result-text';
+                speakBtn.style.display = 'none';
+                return;
+            }
+
+            // Show loading
+            resultDiv.textContent = '翻譯中...';
+            resultDiv.className = 'result-text loading';
+            speakBtn.style.display = 'none';
+
+            // Detect language direction
+            const isJp = isJapanese(input);
+            const sourceLang = isJp ? 'ja-JP' : 'zh-TW';
+            const targetLang = isJp ? 'zh-TW' : 'ja-JP';
+
+            try {
+                // Use MyMemory Translation API
+                const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(input)}&langpair=${sourceLang}|${targetLang}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.responseStatus === 200 && data.responseData) {
+                    lastTranslation = data.responseData.translatedText;
+                    lastTranslationLang = targetLang;
+                    
+                    resultDiv.textContent = lastTranslation;
+                    resultDiv.className = 'result-text';
+                    speakBtn.style.display = 'block';
+                } else {
+                    throw new Error('Translation failed');
+                }
+            } catch (error) {
+                resultDiv.textContent = '翻譯失敗，請稍後再試';
+                resultDiv.className = 'result-text';
+                speakBtn.style.display = 'none';
+                console.error('Translation error:', error);
+            }
+        }
+
+        function speakResult() {
+            if (!lastTranslation) return;
+            
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(lastTranslation);
+            utterance.lang = lastTranslationLang;
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+            
+            const voices = window.speechSynthesis.getVoices();
+            const targetVoice = voices.find(voice => voice.lang.startsWith(lastTranslationLang.substring(0, 2)));
+            if (targetVoice) {
+                utterance.voice = targetVoice;
+            }
+            
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Allow Enter key to translate (Shift+Enter for new line)
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('translateInput');
+            if (input) {
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        translateText();
+                    }
+                });
+            }
+        });
 
         // Load voices (needed for some browsers)
         if (speechSynthesis.onvoiceschanged !== undefined) {
