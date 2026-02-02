@@ -1309,8 +1309,8 @@
             speakBtn.style.display = 'none';
 
             // Set language pair based on current direction
-            const sourceLang = currentDirection === 'zh-ja' ? 'zh-CN' : 'ja';
-            const targetLang = currentDirection === 'zh-ja' ? 'ja' : 'zh-CN';
+            const sourceLang = currentDirection === 'zh-ja' ? 'zh-TW' : 'ja';
+            const targetLang = currentDirection === 'zh-ja' ? 'ja' : 'zh-TW';
 
             try {
                 // Use MyMemory Translation API
@@ -1345,7 +1345,7 @@
             
             const utterance = new SpeechSynthesisUtterance(lastTranslation);
             // Convert API lang code to speech synthesis lang code
-            utterance.lang = lastTranslationLang === 'ja' ? 'ja-JP' : 'zh-CN';
+            utterance.lang = lastTranslationLang === 'ja' ? 'ja-JP' : 'zh-TW';
             utterance.rate = 0.9;
             utterance.pitch = 1.0;
             
