@@ -515,6 +515,31 @@
             margin-bottom: 20px;
         }
 
+        .lang-switch {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .lang-btn {
+            flex: 1;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            color: white;
+            border-color: transparent;
+            font-weight: bold;
+        }
+
         .translator-box textarea {
             width: 100%;
             padding: 12px;
@@ -666,7 +691,15 @@
         <div class="card">
             <h2>🌐 即時翻譯</h2>
             <div class="translator-box">
-                <textarea id="translateInput" placeholder="輸入中文或日文..." rows="3"></textarea>
+                <div class="lang-switch">
+                    <button class="lang-btn active" id="zhToJa" onclick="switchLang('zh-ja')">
+                        中文 → 日文
+                    </button>
+                    <button class="lang-btn" id="jaToZh" onclick="switchLang('ja-zh')">
+                        日文 → 中文
+                    </button>
+                </div>
+                <textarea id="translateInput" placeholder="輸入中文..." rows="3"></textarea>
                 <button class="translate-btn" onclick="translateText()">翻譯 🔄</button>
                 <div class="translate-result" id="translateResult">
                     <div class="result-text" id="resultText">翻譯結果會顯示在這裡</div>
@@ -1237,11 +1270,25 @@
         // Translation
         let lastTranslation = '';
         let lastTranslationLang = 'ja';
+        let currentDirection = 'zh-ja'; // Default: Chinese to Japanese
 
-        // Detect if text is primarily Japanese
-        function isJapanese(text) {
-            const japaneseRegex = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/;
-            return japaneseRegex.test(text);
+        function switchLang(direction) {
+            currentDirection = direction;
+            
+            // Update button states
+            document.getElementById('zhToJa').classList.toggle('active', direction === 'zh-ja');
+            document.getElementById('jaToZh').classList.toggle('active', direction === 'ja-zh');
+            
+            // Update placeholder
+            const input = document.getElementById('translateInput');
+            input.placeholder = direction === 'zh-ja' ? '輸入中文...' : '輸入日文...';
+            
+            // Clear result
+            const resultDiv = document.getElementById('resultText');
+            const speakBtn = document.getElementById('speakResultBtn');
+            resultDiv.textContent = '翻譯結果會顯示在這裡';
+            resultDiv.className = 'result-text';
+            speakBtn.style.display = 'none';
         }
 
         async function translateText() {
@@ -1261,10 +1308,9 @@
             resultDiv.className = 'result-text loading';
             speakBtn.style.display = 'none';
 
-            // Detect language direction
-            const isJp = isJapanese(input);
-            const sourceLang = isJp ? 'ja' : 'zh-CN';
-            const targetLang = isJp ? 'zh-CN' : 'ja';
+            // Set language pair based on current direction
+            const sourceLang = currentDirection === 'zh-ja' ? 'zh-CN' : 'ja';
+            const targetLang = currentDirection === 'zh-ja' ? 'ja' : 'zh-CN';
 
             try {
                 // Use MyMemory Translation API
@@ -1298,12 +1344,15 @@
             window.speechSynthesis.cancel();
             
             const utterance = new SpeechSynthesisUtterance(lastTranslation);
-            utterance.lang = lastTranslationLang;
+            // Convert API lang code to speech synthesis lang code
+            utterance.lang = lastTranslationLang === 'ja' ? 'ja-JP' : 'zh-CN';
             utterance.rate = 0.9;
             utterance.pitch = 1.0;
             
             const voices = window.speechSynthesis.getVoices();
-            const targetVoice = voices.find(voice => voice.lang.startsWith(lastTranslationLang.substring(0, 2)));
+            const targetVoice = voices.find(voice => 
+                voice.lang.startsWith(lastTranslationLang === 'ja' ? 'ja' : 'zh')
+            );
             if (targetVoice) {
                 utterance.voice = targetVoice;
             }
