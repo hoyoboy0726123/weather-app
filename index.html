@@ -1263,14 +1263,16 @@
 
             // Detect language direction
             const isJp = isJapanese(input);
-            const sourceLang = isJp ? 'ja-JP' : 'zh-TW';
-            const targetLang = isJp ? 'zh-TW' : 'ja-JP';
+            const sourceLang = isJp ? 'ja' : 'zh-CN';
+            const targetLang = isJp ? 'zh-CN' : 'ja';
 
             try {
                 // Use MyMemory Translation API
                 const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(input)}&langpair=${sourceLang}|${targetLang}`;
                 const response = await fetch(url);
                 const data = await response.json();
+                
+                console.log('Translation API response:', data); // Debug log
 
                 if (data.responseStatus === 200 && data.responseData) {
                     lastTranslation = data.responseData.translatedText;
