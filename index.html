@@ -640,6 +640,7 @@
             <div class="result-box">
                 <div class="label">換算結果</div>
                 <div class="amount" id="convertResult">輸入金額開始換算</div>
+                <div class="tax-free-result" id="taxFreeResult" style="margin-top:10px; color:#27ae60; font-size:0.9rem;"></div>
             </div>
             <div class="rate-info">匯率：1 TWD = <span id="rateDisplay">4.65</span> JPY (可調整)</div>
             <input type="range" id="rateSlider" min="4.0" max="5.5" step="0.01" value="4.65" 
@@ -1189,19 +1190,25 @@
             const twdInput = document.getElementById('twdInput');
             const jpyInput = document.getElementById('jpyInput');
             const result = document.getElementById('convertResult');
+            const taxFreeResult = document.getElementById('taxFreeResult');
 
             if (source === 'twd' && twdInput.value) {
                 const twd = parseFloat(twdInput.value);
                 const jpy = Math.round(twd * exchangeRate);
+                const taxFreeJpy = Math.round(jpy * 0.9); // 退稅後 (90%)
                 jpyInput.value = jpy;
                 result.textContent = `NT$${twd.toLocaleString()} = ¥${jpy.toLocaleString()}`;
+                taxFreeResult.textContent = `🛍️ 退稅後：¥${taxFreeJpy.toLocaleString()} (省 ¥${(jpy - taxFreeJpy).toLocaleString()})`;
             } else if (source === 'jpy' && jpyInput.value) {
                 const jpy = parseFloat(jpyInput.value);
                 const twd = Math.round(jpy / exchangeRate);
+                const taxFreeJpy = Math.round(jpy * 0.9); // 退稅後 (90%)
                 twdInput.value = twd;
                 result.textContent = `¥${jpy.toLocaleString()} = NT$${twd.toLocaleString()}`;
+                taxFreeResult.textContent = `🛍️ 退稅後：¥${taxFreeJpy.toLocaleString()} (省 ¥${(jpy - taxFreeJpy).toLocaleString()})`;
             } else {
                 result.textContent = '輸入金額開始換算';
+                taxFreeResult.textContent = '';
             }
         }
 
